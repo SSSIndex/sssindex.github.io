@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Games Database</title>
+
+    <link rel="icon" type="image/png" href="../SSS_logo.png"> 
+    <style>
+
+        /* Жесткое скрытие: сильнее любого JavaScript */
+        .permanent-hide { 
+            display: none !important; 
+        }
+
+        :root {
+            --glow-color: #0ff;      
+            --secondary-glow: #0f0;  
+            --bg-color: #050505;     
+            --tag-new: #0f0;         
+            --tag-pop: #ff00ff;         
+            --tag-int: #ff0;         
+            --anim-speed: 0.8s; 
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        @keyframes startup {
+            from { opacity: 0; transform: translateY(15px); filter: brightness(3); }
+            to { opacity: 1; transform: translateY(0); filter: brightness(1); }
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: var(--bg-color);
+            color: var(--glow-color);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            filter: contrast(1.1) brightness(0.9) saturate(1.2);
+            padding-bottom: 80px;
+            /* Блокируем скролл изначально через CSS для надежности */
+            overflow-y: hidden;
+            touch-action: none;
+        }
+
+        body::before {
+            content: " ";
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.04));
+            z-index: 1000;
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+        }
+
+        .appearance {
+            opacity: 0;
+            animation: startup var(--anim-speed) cubic-bezier(0.23, 1, 0.32, 1) forwards;
+        }
+
+        header {
+            position: fixed; top: 0; width: 100%; padding: 20px 50px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 150; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
+        }
+
+        /* ОБЩИЙ СТИЛЬ КНОПОК (КАК НА ГЛАВНУЮ) */
+        .nav-btn, .filter-btn {
+            padding: 8px 20px; 
+            background: transparent; 
+            border: 1px solid var(--glow-color);
+            color: var(--glow-color); 
+            text-decoration: none; 
+            font-size: 14px; 
+            font-family: inherit;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: 0.3s;
+            outline: none;
+        }
+
+        .nav-btn:hover, .filter-btn:hover { 
+            background: var(--glow-color); 
+            color: #000; 
+            box-shadow: 0 0 15px var(--glow-color); 
+        }
+
+        /* СОСТОЯНИЕ АКТИВНОГО ФИЛЬТРА */
+        .filter-btn.active {
+            background: var(--glow-color);
+            color: #000;
+            box-shadow: 0 0 20px var(--glow-color);
+            font-weight: bold;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 120px 20px 40px; }
+
+        .title-wrapper { border-left: 5px solid var(--glow-color); padding-left: 15px; margin-bottom: 25px; }
+        h1 { font-size: clamp(28px, 7vw, 70px); text-transform: uppercase; animation: glitchText 3s infinite; }
+
+        .controls-panel {
+            display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 40px;
+            padding: 20px; border: 1px dashed rgba(0, 255, 255, 0.3);
+            background: rgba(0, 255, 255, 0.02);
+        }
+
+        #gameSearch {
+            flex: 1; min-width: 250px; background: rgba(0,0,0,0.5); border: 1px solid var(--glow-color);
+            padding: 12px; color: var(--glow-color); font-family: inherit; outline: none;
+            text-transform: uppercase; font-size: 14px;
+        }
+
+        .filter-group { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        .game-section { margin-bottom: 50px; }
+        .game-section.section-hidden { display: none !important; }
+
+        .category-header {
+            font-size: 14px; margin-bottom: 20px; padding: 8px 15px;
+            background: rgba(0, 255, 255, 0.05); border-left: 3px solid var(--glow-color);
+            display: flex; align-items: center; gap: 10px; text-transform: uppercase;
+        }
+
+        .works-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px; align-items: start;
+        }
+
+        .work-box {
+            position: relative; background: rgba(0, 20, 20, 0.4);
+            border: 1px solid rgba(0, 255, 255, 0.2); padding: 12px;
+            transition: 0.3s; cursor: pointer;
+        }
+
+        .work-box.hidden { display: none !important; }
+        .work-box:hover { border-color: var(--secondary-glow); transform: translateY(-5px); }
+
+        .tag {
+            position: absolute; top: 10px; right: 10px; padding: 3px 8px;
+            font-size: 10px; font-weight: bold; z-index: 10; text-transform: uppercase;
+            background: #000; border: 1px solid currentColor;
+        }
+        .tag-new { color: var(--tag-new); }
+        .tag-pop { color: var(--tag-pop); }
+        .tag-int { color: var(--tag-int); }
+
+        .img-container { width: 100%; height: 160px; overflow: hidden; margin-bottom: 12px; border: 1px solid #111; }
+        .work-box img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1); transition: 0.5s; }
+        .work-box:hover img { filter: grayscale(0); }
+
+        .work-info { font-size: 12px; border-top: 1px solid rgba(0, 255, 255, 0.1); padding-top: 10px; }
+        .info-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .label { opacity: 0.5; font-size: 9px; text-transform: uppercase; }
+        .game-title { color: var(--glow-color); font-weight: bold; }
+
+        .bottom-bar {
+            position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px;
+            background: rgba(0, 0, 0, 0.95); display: flex; justify-content: space-around;
+            font-size: 8px; border-top: 1px solid rgba(0, 255, 255, 0.2); 
+            z-index: 200; text-transform: uppercase; backdrop-filter: blur(5px);
+        }
+
+        @keyframes glitchText {
+            0% { text-shadow: 2px 0 red, -2px 0 blue; }
+            50% { text-shadow: -1px 0 green, 1px 0 purple; }
+            100% { text-shadow: 2px 0 red, -2px 0 blue; }
+        }
+
+        @media (max-width: 768px) {
+            header { padding: 15px; flex-direction: column; gap: 10px; }
+            .container { padding-top: 180px; }
+            .filter-group { justify-content: center; width: 100%; }
+            .filter-btn { flex: 1; text-align: center; padding: 10px 5px; font-size: 11px; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="appearance" style="animation-delay: 0s;">
+    <div class="system-status">System: Online // Archive_Access: Granted</div>
+    <a href="../" class="nav-btn">[ На главную ]</a>
+</header>
+
+<div class="container">
+    <div class="title-wrapper appearance" style="animation-delay: 0.2s;">
+        <div style="font-size: 10px; opacity: 0.5;">DIRECTORY: C:/GAMES/COLLECTION</div>
+        <h1>АРХИВ_ИГР</h1>
+    </div>
+
+    <div class="controls-panel appearance" style="animation-delay: 0.4s;">
+        <input type="text" id="gameSearch" placeholder="ПОИСК ФАЙЛА...">
+        <div class="filter-group">
+            <button class="filter-btn active" data-filter="all">ВСЕ</button>
+            <button class="filter-btn" data-filter="tag-new">НОВЫЕ</button>
+            <button class="filter-btn" data-filter="tag-pop">ХИТЫ</button>
+            <button class="filter-btn" data-filter="tag-int">ИНТЕРЕСНОЕ</button>
+        </div>
+    </div>
+
+    <div class="model-section permanent-hide appearance" style="animation-delay: 0.6s;">
+        <div class="category-header">
+            <span style="color: var(--secondary-glow)">●</span> ДОСТУПНЫЕ ОБЪЕКТЫ
+        </div>
+        <div class="works-grid">
+            <div class="work-box" onclick="location.href='Game1.html'">
+                <div class="tag tag-new">Новая</div>
+                <div class="img-container"><img src="../NotFound.jpg"></div>
+                <div class="work-info">
+                    <div class="info-row"><span class="label">FILE:</span><span class="game-title">Neon_Drifter_V2</span></div>
+                    <div class="info-row"><span class="label">SIZE:</span><span>120.8 MB</span></div>
+                    <div class="info-row"><span class="label">VER:</span><span>2.1.0</span></div>
+                </div>
+            </div>
+            <div class="work-box" onclick="location.href='game2.html'">
+                <div class="tag tag-pop">Популярная</div>
+                <div class="img-container"><img src="../NotFound.jpg"></div>
+                <div class="work-info">
+                    <div class="info-row"><span class="label">FILE:</span><span class="game-title">Retro_Strike</span></div>
+                    <div class="info-row"><span class="label">SIZE:</span><span>45.2 MB</span></div>
+                    <div class="info-row"><span class="label">VER:</span><span>1.0.4</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-section appearance" style="animation-delay: 0.8s;">
+        <div class="category-header">
+            <span style="color: #f00">○</span> Анонсы
+        </div>
+        <div class="works-grid">
+            <div class="work-box" onclick="location.href='./NonGame/GameSoon_1'">
+                <div class="tag tag-int">Интересная</div>
+                <div class="img-container"><img src="../NotFound.jpg" style="opacity: 0.3"></div>
+                <div class="work-info">
+                    <div class="info-row"><span class="label">FILE:</span><span class="game-title">PANICKED FUTURE</span></div>
+                    <div class="info-row"><span class="label">SIZE:</span><span>НЕИЗВЕСТНО</span></div>
+                    <div class="info-row"><span class="label">VER:</span><span>НЕТ</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="bottom-bar appearance" style="animation-delay: 1s;">
+    <span>SCANNING ●</span>
+    <span>STATION: VHS-GAMES</span>
+    <span>USER: GUEST_ARCHIVIST</span>
+    <span>TIMESTAMP: 2026</span>
+</div>
+
+<script>
+    // ФУНКЦИЯ БЛОКИРОВКИ СКРОЛЛА
+    function preventScroll(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }
+
+    // Включаем блокировку сразу при запуске скрипта
+    window.addEventListener('wheel', preventScroll, { passive: false });
+    window.addEventListener('touchmove', preventScroll, { passive: false });
+
+    // Удаление класса анимации и разблокировка скролла
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            document.querySelectorAll('.appearance').forEach(el => {
+                el.style.opacity = "1";
+                el.classList.remove('appearance');
+            });
+            
+            // РАЗБЛОКИРОВКА СКРОЛЛА
+            document.body.style.overflowY = "auto";
+            document.body.style.touchAction = "auto";
+            window.removeEventListener('wheel', preventScroll);
+            window.removeEventListener('touchmove', preventScroll);
+            
+        }, 2000); // 2 секунды — время, пока проигрываются все анимации
+    });
+
+    const searchInput = document.getElementById('gameSearch');
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const allBoxes = document.querySelectorAll('.work-box');
+    const sections = document.querySelectorAll('.game-section');
+
+    function filterEverything() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+
+        allBoxes.forEach(box => {
+            const titleEl = box.querySelector('.game-title');
+            const title = titleEl ? titleEl.textContent.toLowerCase() : "";
+            const tag = box.querySelector('.tag');
+            
+            const matchesSearch = title.includes(searchTerm);
+            const matchesFilter = activeFilter === 'all' || (tag && tag.classList.contains(activeFilter));
+
+            box.classList.toggle('hidden', !(matchesSearch && matchesFilter));
+        });
+
+        sections.forEach(section => {
+            const visibleCards = section.querySelectorAll('.work-box:not(.hidden)').length;
+            section.classList.toggle('section-hidden', visibleCards === 0);
+        });
+    }
+
+    searchInput.addEventListener('input', filterEverything);
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            filterEverything();
+        });
+    });
+</script>
+</body>
+</html>

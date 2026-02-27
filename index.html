@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SSS Index</title>
+    <link rel="icon" type="image/png" href="SSS_logo.png">
+    <style>
+        :root {
+            --glow-color: #0ff;
+            --secondary-glow: #0f0;
+            --bg-color: #050505;
+            --cb-dynamic: cubic-bezier(0.19, 1, 0.22, 1);
+            --cb-spring: cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+
+        /* 1. ДИНАМИЧНОЕ ПОЯВЛЕНИЕ ПРИ ЗАГРУЗКЕ */
+        @keyframes ultraIn {
+            0% { opacity: 0; transform: scale(1.1) translateY(30px); filter: blur(10px) brightness(2); }
+            100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0) brightness(1); }
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: var(--bg-color);
+            color: var(--glow-color);
+            min-height: 100vh;
+            overflow-x: hidden;
+            overflow-y: hidden; /* Скролл всегда заблокирован для ручного ввода */
+            opacity: 0;
+            animation: ultraIn 0.8s var(--cb-dynamic) forwards;
+            touch-action: none; /* Запрещаем свайпы на мобилках */
+        }
+
+        /* ЭФФЕКТЫ VHS */
+        body::before {
+            content: " ";
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 1000;
+            background-size: 100% 3px, 3px 100%;
+            pointer-events: none;
+        }
+
+        .vignette {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            box-shadow: inset 0 0 150px rgba(0,0,0,0.9);
+            pointer-events: none;
+            z-index: 1001;
+        }
+
+        /* HEADER - ОПТИМИЗИРОВАН */
+        header {
+            position: fixed;
+            top: 0; width: 100%; 
+            padding: 15px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 150;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+            gap: 10px;
+        }
+
+        .nav-btn {
+            padding: 10px 18px; 
+            background: transparent; 
+            border: 1px solid var(--glow-color);
+            color: var(--glow-color); 
+            text-transform: uppercase;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.25s var(--cb-dynamic);
+            outline: none;
+            white-space: nowrap;
+        }
+
+        .nav-btn:hover {
+            background: var(--glow-color);
+            color: #000;
+            box-shadow: 0 0 25px var(--glow-color);
+            transform: scale(1.05);
+        }
+
+        /* ВЫПАДАЮЩЕЕ МЕНЮ - ОПТИМИЗИРОВАНО */
+        .dropdown {
+            position: fixed; 
+            top: 75px; left: 20px; right: 20px; 
+            max-width: 300px;
+            background: rgba(0,0,0,0.95); 
+            border: 1px solid var(--glow-color);
+            padding: 10px; 
+            display: none; 
+            flex-direction: column; 
+            z-index: 160;
+            box-shadow: 10px 10px 0px rgba(0, 255, 255, 0.1);
+        }
+
+        @media (min-width: 601px) {
+            .dropdown { left: 25px; right: auto; width: 220px; }
+        }
+
+        .dropdown.active { display: flex; animation: menuShow 0.2s var(--cb-dynamic); }
+
+        @keyframes menuShow {
+            from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .dropdown a {
+            color: var(--glow-color); 
+            text-decoration: none; 
+            padding: 15px;
+            font-size: 14px; 
+            text-transform: uppercase; 
+            border-bottom: 1px solid rgba(0,255,255,0.05);
+            transition: 0.2s;
+        }
+
+        .dropdown a:hover { background: var(--glow-color); color: #000; padding-left: 25px; }
+
+        /* СЕКЦИИ */
+        section {
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: clamp(36px, 14vw, 110px); 
+            text-transform: uppercase;
+            text-shadow: 3px 0 red, -3px 0 blue;
+            margin-bottom: 20px;
+            letter-spacing: -2px;
+            word-break: break-word;
+        }
+
+        /* КОНТАКТЫ */
+        .contacts-section {
+            background: linear-gradient(180deg, #050505 0%, #0a100a 100%);
+            border-top: 1px solid rgba(0, 255, 255, 0.1);
+            transition: all 0.6s var(--cb-dynamic);
+            opacity: 0;
+            transform: scale(0.9) translateY(100px);
+        }
+
+        .contacts-section.visible {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+
+        .tg-box {
+            width: 100%;
+            max-width: 280px;
+            padding: 40px 20px; 
+            border: 1px solid var(--glow-color);
+            text-decoration: none; 
+            background: rgba(0,0,0,0.4);
+            position: relative;
+            transition: all 0.4s var(--cb-dynamic);
+            display: flex; flex-direction: column; align-items: center;
+            overflow: hidden;
+        }
+
+        .tg-box:hover {
+            transform: translateY(-15px) rotateX(10deg);
+            background: rgba(0, 255, 255, 0.05);
+            border-color: var(--secondary-glow);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 30px rgba(0, 255, 255, 0.2);
+        }
+
+        .tg-box svg { 
+            width: 70px; 
+            fill: var(--glow-color); 
+            transition: all 0.5s var(--cb-spring); 
+        }
+
+        .tg-box:hover svg { 
+            fill: var(--secondary-glow); 
+            transform: scale(1.3) rotate(-5deg);
+        }
+
+        .tg-text {
+            margin-top: 25px;
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            transition: 0.4s var(--cb-dynamic);
+        }
+
+        /* FOOTER */
+        .bottom-bar {
+            position: fixed;
+            bottom: 0; width: 100%; 
+            padding: 12px 15px;
+            background: #000;
+            display: flex; justify-content: space-around;
+            font-size: 9px;
+            border-top: 1px solid rgba(0, 255, 255, 0.2);
+            z-index: 150;
+            text-transform: uppercase;
+        }
+
+        #system-flash {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--glow-color); z-index: 2000; pointer-events: none; opacity: 0;
+        }
+
+        @media (max-width: 600px) {
+            header div { display: none; } 
+            h2 { font-size: 20px !important; letter-spacing: 5px !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="vignette"></div>
+<div id="system-flash"></div>
+
+<header>
+    <button class="nav-btn" id="menuBtn">[ КАТЕГОРИИ ]</button>
+    <div style="font-size: 10px; opacity: 0.6; letter-spacing: 2px; color: var(--glow-color);">STATUS: STABLE // SSS_ROOT</div>
+    <button class="nav-btn" onclick="changeSection('contacts')">[ КОНТАКТЫ ]</button>
+</header>
+
+<div class="dropdown" id="dropdownMenu">
+    <a href="./Games/">> БАЗА ИГР</a>
+    <a href="./Models/">> 3D МОДЕЛИ</a>
+    <a href="./News/">> НОВОСТИ</a>
+</div>
+
+<section id="home">
+    <div style="font-size: 10px; margin-bottom: 10px; color: var(--secondary-glow); letter-spacing: 3px;">SYSTEM_OVERRIDE_RUNNING</div>
+    <h1>SSS INDEX</h1>
+    <div id="typewriter" style="font-weight: bold; letter-spacing: 1px; color: var(--secondary-glow); min-height: 1.2em;"></div>
+</section>
+
+<section id="contacts" class="contacts-section">
+    <h2 style="margin-bottom: 50px; letter-spacing: 15px; font-size: 28px; color: var(--secondary-glow);">ДРУГИЕ СОЦ. СЕТИ</h2>
+    
+    <a href="https://t.me/SSS_Index" target="_blank" class="tg-box">
+        <svg viewBox="0 0 24 24"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm6.242 8.657l-2.094 9.141c-.139.61-.479.757-.991.464-1.037-.597-2.316-1.468-3.376-2.146l-1.614-1.076-3.178 2.378c-.544.316-.957.151-.9-.553l.995-6.861 9.079-8.204c.404-.367.701-.157.425.077l-11.66 7.429-3.085-.945c-.62-.182-.806-.595-.147-.941l14.39-8.586c.642-.379 1.15.011.956.916z"/></svg>
+        <div class="tg-text">@SSS_Index</div>
+    </a>
+
+    <button class="nav-btn" style="margin-top: 60px;" onclick="changeSection('home')">[ НАЗАД ]</button>
+</section>
+
+<div class="bottom-bar">
+    <span style="color: red;">REC ●</span>
+    <span id="clock">00:00:00</span>
+    <span>GUEST_V4</span>
+</div>
+
+<script>
+    const menuBtn = document.getElementById('menuBtn');
+    const menu = document.getElementById('dropdownMenu');
+    
+    menuBtn.onclick = (e) => { 
+        e.stopPropagation(); 
+        menu.classList.toggle('active'); 
+    };
+    document.onclick = () => menu.classList.remove('active');
+
+    const text = "ACCESSING ARCHIVE V.4.0...";
+    let i = 0;
+    function type() {
+        if (i < text.length) {
+            document.getElementById("typewriter").innerHTML += text.charAt(i);
+            i++;
+            setTimeout(type, 40);
+        }
+    }
+
+    // НОВАЯ ФУНКЦИЯ БЛОКИРОВКИ
+    function preventScroll(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }
+
+    function changeSection(id) {
+        const target = document.getElementById(id);
+        const flash = document.getElementById('system-flash');
+        
+        // Блокируем ЛЮБОЕ движение колесика и пальцев
+        window.addEventListener('wheel', preventScroll, { passive: false });
+        window.addEventListener('touchmove', preventScroll, { passive: false });
+
+        flash.style.transition = 'none';
+        flash.style.opacity = "0.4";
+        
+        target.scrollIntoView({ behavior: 'smooth' });
+        
+        if(id === 'contacts') {
+            target.classList.add('visible');
+        } else {
+            document.getElementById('contacts').classList.remove('visible');
+        }
+
+        setTimeout(() => {
+            flash.style.transition = 'opacity 0.4s ease-out';
+            flash.style.opacity = "0";
+            
+            // Разблокируем только после того, как скролл ТОЧНО закончился
+            setTimeout(() => {
+                window.removeEventListener('wheel', preventScroll);
+                window.removeEventListener('touchmove', preventScroll);
+            }, 800); 
+        }, 50);
+    }
+
+    document.addEventListener('mousemove', (e) => {
+        if (window.innerWidth < 1024) return; 
+        const boxes = document.querySelectorAll('.tg-box');
+        const x = (window.innerWidth / 2 - e.pageX) / 60;
+        const y = (window.innerHeight / 2 - e.pageY) / 60;
+        boxes.forEach(box => {
+            if (!box.matches(':hover')) {
+                box.style.transform = `rotateY(${x}deg) rotateX(${y}deg)`;
+            }
+        });
+    });
+
+    window.onload = () => {
+        setTimeout(type, 600);
+        setInterval(() => {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString();
+        }, 1000);
+    };
+</script>
+
+</body>
+</html>
