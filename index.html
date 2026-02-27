@@ -20,6 +20,41 @@
             100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0) brightness(1); }
         }
 
+        /* УСИЛЕННАЯ РАНДОМНАЯ АНИМАЦИЯ ГЛЮКА ДЛЯ ТЕКСТА */
+        @keyframes textGlitch {
+            0%, 100% { text-shadow: 2px 0 red, -2px 0 blue; transform: none; clip-path: inset(0 0 0 0); }
+            2% { clip-path: inset(20% -6px 80% 0); transform: translate(-10px, 5px); }
+            4% { clip-path: inset(50% -6px 30% 0); transform: translate(10px, -5px); text-shadow: 5px 0 lime, -5px 0 fuchsia; }
+            6% { clip-path: inset(0 0 0 0); transform: none; }
+            30% { text-shadow: 2px 0 red, -2px 0 blue; transform: none; }
+            31% { transform: skew(20deg); text-shadow: -5px 0 red, 5px 0 blue; }
+            32% { transform: none; }
+            55% { clip-path: inset(10% 0 70% 0); transform: translateX(-20px); }
+            56% { clip-path: inset(80% 0 5% 0); transform: translateX(20px); }
+            57% { clip-path: inset(0 0 0 0); transform: none; }
+            80% { text-shadow: 2px 0 red, -2px 0 blue; }
+            81% { text-shadow: 10px 0 red, -10px 0 blue; transform: scaleY(1.5) skewX(30deg); filter: blur(2px); }
+            82% { text-shadow: 2px 0 red, -2px 0 blue; transform: none; filter: none; }
+        }
+
+        /* АНИМАЦИИ ДЛЯ ЭФФЕКТОВ VHS */
+        @keyframes scanlines {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 100%; }
+        }
+
+        /* КРИТИЧЕСКИЙ ГЛИТЧ ФОНА (КЛАСС TRIGGERED) */
+        @keyframes extremeBgGlitch {
+            0% { filter: hue-rotate(0deg) brightness(1) contrast(1); transform: scale(1); }
+            10% { filter: hue-rotate(90deg) brightness(2) contrast(1.5); transform: scale(1.02) skewX(2deg); opacity: 0.8; }
+            20% { filter: hue-rotate(-90deg) brightness(0.5); transform: scale(0.98) translateX(-10px); }
+            30% { filter: none; transform: none; }
+            40% { filter: invert(1) brightness(2); transform: scale(1.1); }
+            45% { filter: none; transform: none; }
+            80% { filter: hue-rotate(180deg) contrast(2); transform: skewY(1deg); }
+            100% { filter: none; transform: none; }
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }
 
         body {
@@ -28,10 +63,15 @@
             color: var(--glow-color);
             min-height: 100vh;
             overflow-x: hidden;
-            overflow-y: hidden; /* Скролл всегда заблокирован для ручного ввода */
+            overflow-y: hidden; 
             opacity: 0;
             animation: ultraIn 0.8s var(--cb-dynamic) forwards;
-            touch-action: none; /* Запрещаем свайпы на мобилках */
+            touch-action: none; 
+        }
+
+        /* КЛАСС ДЛЯ РАНДОМНОГО ГЛИТЧА */
+        body.system-critical {
+            animation: extremeBgGlitch 0.3s steps(1) infinite;
         }
 
         /* ЭФФЕКТЫ VHS */
@@ -46,6 +86,20 @@
             pointer-events: none;
         }
 
+        .vhs-overlay {
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background-image: 
+                repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 1px, transparent 1px, transparent 2px),
+                repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px, transparent 1px, transparent 2px),
+                repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px, transparent 1px, transparent 2px);
+            background-size: 100% 3px, 3px 3px, 3px 3px;
+            z-index: 1002;
+            pointer-events: none;
+            opacity: 0.1; 
+            animation: scanlines 0.2s linear infinite;
+        }
+
         .vignette {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -54,7 +108,6 @@
             z-index: 1001;
         }
 
-        /* HEADER - ОПТИМИЗИРОВАН */
         header {
             position: fixed;
             top: 0; width: 100%; 
@@ -89,7 +142,6 @@
             transform: scale(1.05);
         }
 
-        /* ВЫПАДАЮЩЕЕ МЕНЮ - ОПТИМИЗИРОВАНО */
         .dropdown {
             position: fixed; 
             top: 75px; left: 20px; right: 20px; 
@@ -109,11 +161,6 @@
 
         .dropdown.active { display: flex; animation: menuShow 0.2s var(--cb-dynamic); }
 
-        @keyframes menuShow {
-            from { opacity: 0; transform: translateY(-10px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
         .dropdown a {
             color: var(--glow-color); 
             text-decoration: none; 
@@ -126,7 +173,6 @@
 
         .dropdown a:hover { background: var(--glow-color); color: #000; padding-left: 25px; }
 
-        /* СЕКЦИИ */
         section {
             min-height: 100vh;
             display: flex; flex-direction: column;
@@ -138,13 +184,14 @@
         h1 {
             font-size: clamp(36px, 14vw, 110px); 
             text-transform: uppercase;
-            text-shadow: 3px 0 red, -3px 0 blue;
+            text-shadow: 2px 0 red, -2px 0 blue;
             margin-bottom: 20px;
             letter-spacing: -2px;
             word-break: break-word;
+            animation: textGlitch 5s steps(1) infinite; 
+            position: relative;
         }
 
-        /* КОНТАКТЫ */
         .contacts-section {
             background: linear-gradient(180deg, #050505 0%, #0a100a 100%);
             border-top: 1px solid rgba(0, 255, 255, 0.1);
@@ -197,7 +244,6 @@
             transition: 0.4s var(--cb-dynamic);
         }
 
-        /* FOOTER */
         .bottom-bar {
             position: fixed;
             bottom: 0; width: 100%; 
@@ -223,6 +269,7 @@
 </head>
 <body>
 
+<div class="vhs-overlay"></div>
 <div class="vignette"></div>
 <div id="system-flash"></div>
 
@@ -246,12 +293,10 @@
 
 <section id="contacts" class="contacts-section">
     <h2 style="margin-bottom: 50px; letter-spacing: 15px; font-size: 28px; color: var(--secondary-glow);">ДРУГИЕ СОЦ. СЕТИ</h2>
-    
     <a href="https://t.me/SSS_Index" target="_blank" class="tg-box">
         <svg viewBox="0 0 24 24"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm6.242 8.657l-2.094 9.141c-.139.61-.479.757-.991.464-1.037-.597-2.316-1.468-3.376-2.146l-1.614-1.076-3.178 2.378c-.544.316-.957.151-.9-.553l.995-6.861 9.079-8.204c.404-.367.701-.157.425.077l-11.66 7.429-3.085-.945c-.62-.182-.806-.595-.147-.941l14.39-8.586c.642-.379 1.15.011.956.916z"/></svg>
         <div class="tg-text">@SSS_Index</div>
     </a>
-
     <button class="nav-btn" style="margin-top: 60px;" onclick="changeSection('home')">[ НАЗАД ]</button>
 </section>
 
@@ -262,6 +307,26 @@
 </div>
 
 <script>
+    /* ——— СИСТЕМНАЯ ЛОГИКА РАНДОМНОГО ГЛИТЧА ——— */
+    function triggerRandomGlitch() {
+        // Рандомный интервал: от 20 сек (20000 мс) до 2 мин (120000 мс)
+        const nextGlitch = Math.floor(Math.random() * (120000 - 20000 + 1)) + 20000;
+        
+        setTimeout(() => {
+            document.body.classList.add('system-critical');
+            
+            // Длительность глитча: 2-3 секунды
+            const duration = Math.floor(Math.random() * (3000 - 2000 + 1)) + 2000;
+            
+            setTimeout(() => {
+                document.body.classList.remove('system-critical');
+                triggerRandomGlitch(); // Запуск следующего цикла
+            }, duration);
+            
+        }, nextGlitch);
+    }
+    /* —————————————————————————————————————————— */
+
     const menuBtn = document.getElementById('menuBtn');
     const menu = document.getElementById('dropdownMenu');
     
@@ -281,7 +346,6 @@
         }
     }
 
-    // НОВАЯ ФУНКЦИЯ БЛОКИРОВКИ
     function preventScroll(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -292,7 +356,6 @@
         const target = document.getElementById(id);
         const flash = document.getElementById('system-flash');
         
-        // Блокируем ЛЮБОЕ движение колесика и пальцев
         window.addEventListener('wheel', preventScroll, { passive: false });
         window.addEventListener('touchmove', preventScroll, { passive: false });
 
@@ -311,7 +374,6 @@
             flash.style.transition = 'opacity 0.4s ease-out';
             flash.style.opacity = "0";
             
-            // Разблокируем только после того, как скролл ТОЧНО закончился
             setTimeout(() => {
                 window.removeEventListener('wheel', preventScroll);
                 window.removeEventListener('touchmove', preventScroll);
@@ -336,6 +398,7 @@
         setInterval(() => {
             document.getElementById('clock').innerText = new Date().toLocaleTimeString();
         }, 1000);
+        triggerRandomGlitch(); // ЗАПУСК РАНДОМА ПРИ ЗАГРУЗКЕ
     };
 </script>
 
